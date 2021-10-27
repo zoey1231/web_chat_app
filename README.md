@@ -1,6 +1,6 @@
 # web_chat_app
 ## Keywords
-Full-stack, HTML, CSS, Javascript, NodeJS, MongoDB, express, WebSocket
+Web application: Full-stack, HTML, CSS, Javascript, NodeJS, MongoDB, express, WebSocket
 
 ## Project overview
 an online discussion forum where anyone can create a chat room about a topic and people can have live chat using the application.
