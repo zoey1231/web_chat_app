@@ -1,6 +1,9 @@
-# web_chat_app
+# Project overview
 an online discussion forum where anyone can create a chat room about a topic and people can have live chat using the application.
 
-![mainpage.png](./screenshot/main-page.png)
-![chatpage.png](./screenshot/chat-page.png)
-![profile.png](./screenshot/profile-page.png)
+## Keywords
+Full-stack, HTML, CSS, Javascript, NodeJS, MongoDB, express
+
+
+Here are sample screenshot of the oneline chat room app:
+![mainpage.png](./screenshot/screenshot.png)
