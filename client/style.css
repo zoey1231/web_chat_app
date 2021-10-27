@@ -49,6 +49,9 @@ a {
 #Profile::before {
     background:url(assets/profile-icon.png);
 }
+#avatar::before {
+    background:url(assets/profile-icon.png);
+}
 #app-menu > li:hover {
     color: red;
     background-color: #8290e0; 

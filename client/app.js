@@ -371,7 +371,10 @@ function ProfileView() {
                     <label>Password</label><input type="password">
                 </div>
                 <div class="form-field">
-                    <label>Avatar </label><input type="file">
+                    <label >Avatar Image</label><input id="avatar" type="file">
+                </div>
+                <div class="form-field">
+                    <label >About</label><input type="text">
                 </div>
                 
             </div>
