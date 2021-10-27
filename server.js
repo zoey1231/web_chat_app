@@ -1,7 +1,9 @@
 
-// assuming cpen400a-tester.js is in the same directory as server.js
-const cpen400a = require('./cpen400a-tester.js');
-const WebSocket = require('ws');
+// // assuming cpen400a-tester.js is in the same directory as server.js
+// const cpen400a = require('./cpen400a-tester.js');
+const WebSocket = require('ws');//ws is the de-facto WebSocket module providing a high-level API for essential WebSocket operations
+
+//implementing a WebSocket server to act as a message broker between the clients
 const broker = new WebSocket.Server({ port: 8000 });
 
 const path = require('path');
@@ -10,7 +12,8 @@ const express = require('express');
 const crypto = require('crypto');
 
 var database = require('./Database.js');
-var mongoUrl = "mongodb://localhost:27017";
+// var mongoUrl = "mongodb://localhost:27017";
+var mongoUrl = "mongodb+srv://zoey1231:zhouli1252@cpen400a.pfeve.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 var dbName = "cpen400a-messenger";
 var db = new database(mongoUrl, dbName);
 
@@ -33,9 +36,8 @@ app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
 
-
-
-
+//This object will store the messages for each of the rooms,
+// using the room id as the key. 
 var messages = {};
 function getMessages() {
 	db.getRooms().then((rooms) => {
@@ -56,6 +58,9 @@ app.use('/chat/:room_id', sessionManager.middleware);
 app.use('/chat', sessionManager.middleware);
 app.use('/profile', sessionManager.middleware);
 
+/**
+ *  Define an Express.js GET endpoint at the path /chat using the Express.js API method route
+ */
 app.route('/chat').get(function (req, res, next) {
 	var result = [];
 	db.getRooms().then(rooms => {
@@ -71,6 +76,7 @@ app.route('/chat').get(function (req, res, next) {
 		res.status(200).send(result);
 	}).catch(err => res.status(404).send(err));
 })
+//an Express.js POST endpoint at the path /chat, add the room to database
 	.post(function (req, res, next) {
 		//console.log("Input into POST /chat:\n", req.body);
 		db.addRoom(req.body).then(result => {
@@ -133,7 +139,7 @@ app.route('/logout').get(function (req, res, next) {
 
 app.route('/login')
 	.post(function (req, res, next) {
-		//console.log("Input into POST /login:\n", req.body);
+		console.log("Input into POST /login:\n", req.body);
 		var username = req.body.username;
 		var password = req.body.password;
 		var maxAge = req.body.maxAge;
@@ -146,11 +152,13 @@ app.route('/login')
 			//if user is found, check the password and create a new session using the createSession function,and then redirect the request to /
 			else {
 				if (isCorrectPassword(password, result.password)) {
+					console.log("password is correct.")
 					sessionManager.createSession(res, username);
 					res.redirect('/');
 				}
 				else {
 					//If the password is incorrect, redirect back to the /login page.
+					console.log("password is NOT correct.")
 					res.redirect('/login');
 				}
 			}
@@ -163,6 +171,8 @@ app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
 
+//The WebSocket server's role is to simply act as a message broker between the clients.
+// For example, assuming 3 clients - A, B, and C - are connected, if client A sends a message, it will relay the message to clients B and C.
 broker.on('connection', function connection(ws, request) {
 	//read the cookie information 
 	var cookie = request.headers.cookie;
@@ -200,6 +210,7 @@ broker.on('connection', function connection(ws, request) {
 		}
 		messages[roomID].push(message);
 		//console.log("in broker,now messages is:\n", messages);
+
 		//If the length of the corresponding messages[message.roomId] array is equal to messageBlockSize after pushing the new message,
 		// create a new Conversation object and add to the database by calling db.addConversation
 		if (messages[roomID].length == messageBlockSize) {
@@ -233,6 +244,6 @@ app.use('/', express.static(clientApp, { extensions: ['html'] }));
 
 
 app.use(sessionManager.middlewareErrorHandler);
-// at the very end of server.js
-cpen400a.connect('http://35.183.65.155/cpen400a/test-a5-server.js');
-cpen400a.export(__filename, { app, messages, broker, db, messageBlockSize, sessionManager, isCorrectPassword });
+
+// cpen400a.connect('http://35.183.65.155/cpen400a/test-a5-server.js');
+// cpen400a.export(__filename, { app, messages, broker, db, messageBlockSize, sessionManager, isCorrectPassword });

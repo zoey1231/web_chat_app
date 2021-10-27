@@ -1,6 +1,11 @@
 var profile = { username: "Alice" };
+
+//This object store functions you can call to make different requests to the server
 var Service = {
-    origin: window.location.origin,
+    origin: window.location.origin,//store the URL of your server as a string
+
+    //To fetch the list of rooms from server by making an AJAX request to Service.origin + "/chat" URL 
+    //and return a Promise that resolves to the JSON response data
     getAllRooms: function () {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", this.origin + "/chat");
@@ -20,6 +25,7 @@ var Service = {
 
         });
     },
+    // make a POST request to the Service.origin + "/chat" endpoint, with the given data in the request payload
     addRoom: function (data) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", this.origin + "/chat");
@@ -77,15 +83,34 @@ var Service = {
             }
 
         });
+    },
+    logOut: function () {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", this.origin + "/logout");
+        xhr.send();
+        return new Promise((resolve, reject) => {
+            xhr.onload = function () {
+                if (xhr.status == 200) {
+                    resolve(null);
+                } else {
+                    reject(new Error(xhr.responseText));
+                }
+            };
+            xhr.onerror = function () {
+                reject(new Error("client-side error:" + xhr.responseText));
+            }
+
+        });
     }
 
 };
 /**
  * The generator function will "remember" the last conversation fetched, and incrementally fetch the conversations as 
  * the user scrolls to the top of the chat view, until there is no more conversation blocks to be read.
+ * ( "infinite scrolling")
  */
 function* makeConversationLoader(room) {
-    console.log("In makeConversationLoader");
+    //console.log("In makeConversationLoader");
     //var lastTimeFetched = Date.now();
     var lastTimeFetched = room.timeCreated;
     while (lastTimeFetched > 0 && room.canLoadConversation) {
@@ -93,7 +118,7 @@ function* makeConversationLoader(room) {
         yield new Promise((resolve, reject) => {
             Service.getLastConversation(room["id"], lastTimeFetched).then(
                 result => {
-                    console.log("in makeConversationLoader, result is:", result);
+                    //console.log("in makeConversationLoader, result is:", result);
                     if (result) {
                         lastTimeFetched = result["timestamp"];
                         room.canLoadConversation = true;
@@ -125,6 +150,10 @@ function createDOM(htmlString) {
 function LobbyView(lobby) {
     this.lobby = lobby;
     var self = this;
+    /**
+     * add a new list item to the this.listElem element, 
+     * generating the DOM with the given room data. 
+     */
     this.lobby.onNewRoom = function (room) {
         var li = document.createElement("li");
         var a = document.createElement("a");
@@ -138,6 +167,7 @@ function LobbyView(lobby) {
         li.id = room.id;
         self.listElem.appendChild(li);
     }
+    //create the DOM for the "lobby page"
     this.elem = createDOM(
         `<div class="content">
             <ul class="room-list">
@@ -194,6 +224,7 @@ function ChatView(socket) {
     this.socket = socket;
     this.room = null;
 
+    //create the DOM for the "chat page" 
     this.elem = createDOM(
         `<div class="content">
             <h4 class="room-name">Everyone in CPEN400A</h4>
@@ -221,12 +252,15 @@ function ChatView(socket) {
     });
     this.inputElem.addEventListener("keyup", e => {
 
-        //The event handler should call the sendMessage method only if the key is the "enter" key without the "shift" key.
+        //The event handler should call the sendMessage method only if the key
+        // is the "enter" key without the "shift" key.
         if (e.key == "Enter" && !e.shiftKey) {
             this.sendMessage();
         }
     });
+
     /**
+     *  trigger the entire fetch-update-render cycle when the mouse is scrolled up in the chat view
      *  Invoke the generator's next function, only if the following conditions are met:
             The scroll is at the top of the view
             Mouse scroll direction is "up"
@@ -241,6 +275,9 @@ function ChatView(socket) {
 
     });
 }
+/**
+ *   call the addMessage method of the this.room object.
+ */
 ChatView.prototype.sendMessage = function () {
 
     this.socket.send(JSON.stringify({ roomId: this.room.id, username: profile.username, text: this.inputElem.value }));
@@ -250,11 +287,12 @@ ChatView.prototype.sendMessage = function () {
 ChatView.prototype.setRoom = function (room) {
     this.room = room;
 
+    //Update the this.titleElem to display the new room name
     this.titleElem.innerText = room.name;
     emptyDOM(this.titleElem);
     emptyDOM(this.chatElem);
 
-
+    //dynamically create the message boxes from the this.room.messages array
     for (var i = 0; i < this.room.messages.length; i++) {
         var message = this.room.messages[i];
         var div = document.createElement("div");
@@ -274,6 +312,7 @@ ChatView.prototype.setRoom = function (room) {
         div.appendChild(msgText_span);
         this.chatElem.appendChild(div);
     }
+    //add a new message box on this.chatElem element
     this.room.onNewMessage = (message) => {
         var div = document.createElement("div");
         div.classList.add("message");
@@ -321,6 +360,7 @@ ChatView.prototype.setRoom = function (room) {
 
 }
 function ProfileView() {
+    //create the DOM for the "profile page"
     this.elem = createDOM(
         `<div class="content">
             <div class="profile-form">
@@ -331,15 +371,25 @@ function ProfileView() {
                     <label>Password</label><input type="password">
                 </div>
                 <div class="form-field">
-                    <label>Avatar Image</label><input type="file">
+                    <label>Avatar </label><input type="file">
                 </div>
+                
             </div>
             <div class="page-control">
-                <button>Save</button>
+                <button id="save_btn">Save</button>
+                <button id="logout_btn">Logout</button>
             </div>
         </div>`
     );
+    this.save_btn = this.elem.querySelector("#save_btn");
+    this.logout_btn = this.elem.querySelector("#logout_btn");
 
+    this.logout_btn.addEventListener("click", function () {
+        Service.logOut().then((result) => {
+            alert("Successfully logout!")
+        }, (error) => console.log(error));
+
+    });
 }
 
 function Room(id, name, image = "assets/everyone-icon.png", messages = []) {
@@ -354,7 +404,7 @@ function Room(id, name, image = "assets/everyone-icon.png", messages = []) {
 Room.prototype.addMessage = function (username, text) {
     if (text == "" || text.trim() == "") return;
     else {
-        //"sanitize" a given user input
+        //"sanitize" a given user input, and then push the object into the this.messages array
         var message = { username: username, text: text };
         if (text.includes("<img") || text.includes("<button") || text.includes("</button") || text.includes("<div")) {
             message.text = " ";
@@ -365,6 +415,7 @@ Room.prototype.addMessage = function (username, text) {
         this.onNewMessage(message);
     }
 }
+// insert the given messages at the beginning of the Room.messages array. Make sure the order of messages is chronological.
 Room.prototype.addConversation = function (conversation) {
     console.log("Input to app.js addConversation is ", conversation);
 
@@ -384,6 +435,10 @@ function Lobby() {
     var room4 = new Room(4, "rmFour");
     this.rooms = {};
 }
+/**
+ *  search through the rooms and return the room with
+ *  id = roomId if found.
+ */
 Lobby.prototype.getRoom = function (roomId) {
     for (const id in this.rooms) {
         if (id == roomId) {
@@ -391,6 +446,11 @@ Lobby.prototype.getRoom = function (roomId) {
         }
     }
 }
+
+/**
+ *   create a new Room object using the given arguments
+ *   and add the object in the this.rooms array.
+ */
 Lobby.prototype.addRoom = function (id, name, image, messages) {
     var room = new Room(id, name, image, messages);
     this.rooms[room.id] = room;
@@ -401,6 +461,7 @@ Lobby.prototype.addRoom = function (id, name, image, messages) {
 }
 
 function main() {
+    //Using a WebSocket object on the client side, the client application can "listen" to messages from the server
     var socket = new WebSocket("ws://" + window.location.hostname + ":8000");
     socket.addEventListener("message", (message) => {
         console.log(message);
@@ -409,11 +470,17 @@ function main() {
         room.addMessage(msg_obj.username, msg_obj.text);
     });
 
+    //the object is the "single source of truth" within the application
     var lobby = new Lobby();
+    //instantiate the view objects 
     var lobbyView = new LobbyView(lobby);
     var chatView = new ChatView(socket);
     var profileView = new ProfileView();
 
+    /**
+     * renderRoute read the URL from the address bar and then 
+     * conditionally perform action based on different pages
+     */
     var renderRoute = function () {
         var url_hash = window.location.hash;
         //extract the first part of the path
@@ -421,14 +488,16 @@ function main() {
         var firstPart = url_components_array[1];
         var room_id = url_components_array[2];
 
-
         var page_view = document.getElementById("page-view");
         if (firstPart == "") {
+            //If the first part of the path is an empty string ""
             //empty the contents of #page-view, and then add it with the corresponding content from the lobby page(i.e.,div.content)
             emptyDOM(page_view);
             page_view.appendChild(lobbyView.elem);
         }
         else if (firstPart == "chat") {
+            //If the first part of the path is "chat", empty the contents of the #page-view, 
+            //and then populate it with the corresponding content from chat.html
             emptyDOM(page_view);
             page_view.appendChild(chatView.elem);
             var currentRoom = lobby.getRoom(room_id);
@@ -437,13 +506,18 @@ function main() {
             }
         }
         else if (firstPart == "profile") {
+            ///If the first part of the path is "profile", do the same
             emptyDOM(page_view);
             page_view.appendChild(profileView.elem);
         }
     };
+    /**
+     * call the getAllRooms function you just created to make an AJAX request to the server. 
+     * When the returned Promise resolves, update lobby.rooms object by iterating through the
+     * array of rooms just received from the server. 
+     */
     var refreshLobby = function () {
-        Service.getAllRooms().then((result) => {//When the returned Promise resolves, update lobby.rooms object
-            //iterating through the array of rooms just received from the server
+        Service.getAllRooms().then((result) => {
             for (var i = 0; i < result.length; i++) {
                 var room = result[i];
                 //If a Room already exists, update the name and image. 
@@ -459,6 +533,8 @@ function main() {
         }, (error) => console.log(error));
     };
 
+    //attach the renderRoute function as the event handler for the popstate event
+    //The popstate event is fired when the URL changes
     window.addEventListener("popstate", renderRoute);
 
 
@@ -472,11 +548,14 @@ function main() {
         }
     }, (error) => console.log(error));
 
+    //appropriate page is rendered upon page load
     renderRoute();
     refreshLobby();
+
+    //periodically refresh the list of chat rooms by calling refreshLobby
     var time = 30000;
     var interval = setInterval(refreshLobby, time);
-    cpen400a.export(arguments.callee, { renderRoute, lobby, lobbyView, chatView, profileView, refreshLobby, socket });
+    //cpen400a.export(arguments.callee, { renderRoute, lobby, lobbyView, chatView, profileView, refreshLobby, socket });
 }
 
 window.addEventListener("load", main);

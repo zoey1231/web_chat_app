@@ -10,10 +10,9 @@ function SessionManager() {
     // keeping the session data inside a closure to keep them protected
     const sessions = {};
 
-    // might be worth thinking about why we create these functions
-    // as anonymous functions (per each instance) and not as prototype methods
+   
     this.createSession = (response, username, maxAge = CookieMaxAgeMs) => {
-        console.log("Input tocreateSession():" + "username:" + username + " maxAge:" + maxAge)
+        console.log("Input to createSession():" + "username:" + username + " maxAge:" + maxAge)
         var token = crypto.randomBytes(100).toString('hex');
         var timeTokenCreated = Date.now();
         sessions[token] = { username: username, timeTokenCreated: timeTokenCreated, timeExpired: timeTokenCreated + maxAge };
@@ -25,6 +24,7 @@ function SessionManager() {
     };
 
     this.deleteSession = (request) => {
+        console.log("DeleteSession")
         var cookie = request.session;
         delete request.username;
         delete request.session;

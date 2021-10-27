@@ -3,7 +3,7 @@ const { MongoClient, ObjectID } = require('mongodb');	// require the mongodb dri
 /**
  * Uses mongodb v3.6+ - [API Documentation](http://mongodb.github.io/node-mongodb-native/3.6/api/)
  * Database wraps a mongoDB connection to provide a higher-level abstraction layer
- * for manipulating the objects in our cpen400a app.
+ * for manipulating the objects in our app.
  */
 function Database(mongoUrl, dbName) {
     if (!(this instanceof Database)) return new Database(mongoUrl, dbName);
@@ -31,7 +31,7 @@ function Database(mongoUrl, dbName) {
 Database.prototype.getRooms = function () {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-			/* TODO: read the chatrooms from `db`
+			/* read the chatrooms from `db`
 			 * and resolve an array of chatrooms */
             var collection = db.collection("chatrooms");
             collection.find({}).toArray(function (err, result) {
@@ -48,7 +48,7 @@ Database.prototype.getRooms = function () {
 Database.prototype.getRoom = function (room_id) {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-			/* TODO: read the chatroom from `db`
+			/* read the chatroom from `db`
 			 * and resolve the result */
             console.log("Input into database.js getRoom:\n", room_id);
             let id;
@@ -77,7 +77,7 @@ Database.prototype.getRoom = function (room_id) {
 Database.prototype.addRoom = function (room) {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-			/* TODO: insert a room in the "chatrooms" collection in `db`
+			/* insert a room in the "chatrooms" collection in `db`
 			 * and resolve the newly added room */
             //if id is unassigned by the user, we will let mongodb to assign one 
             console.log("Input into database.js addRoom:\n", room);
@@ -101,7 +101,7 @@ Database.prototype.addRoom = function (room) {
 Database.prototype.getLastConversation = function (room_id, before) {
     return this.connected.then(db =>
         new Promise(async (resolve, reject) => {
-			/* TODO: read a conversation from `db` based on the given arguments
+			/* read a conversation from `db` based on the given arguments
 			 * and resolve if found */
             console.log("Input into database.js getLastConversation:", room_id, before);
             var time;
@@ -133,7 +133,7 @@ Database.prototype.getLastConversation = function (room_id, before) {
 Database.prototype.addConversation = function (conversation) {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-			/* TODO: insert a conversation in the "conversations" collection in `db`
+			/* insert a conversation in the "conversations" collection in `db`
 			 * and resolve the newly added conversation */
             console.log("Input into database.js addConversation:", conversation);
             if (conversation["room_id"] && conversation["timestamp"] && conversation["messages"]) {
