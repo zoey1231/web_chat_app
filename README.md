@@ -8,7 +8,7 @@ an online discussion forum where anyone can create a chat room about a topic and
 Here are sample screenshot of the oneline chat room app:
 ![mainpage.png](./screenshot/screenshot.png)
 
-##Setup
+## Setup
 **installing dependencies**
 npm install
 **Serving web application**
