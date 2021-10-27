@@ -9,13 +9,13 @@ Here are sample screenshot of the oneline chat room app:
 ![mainpage.png](./screenshot/screenshot.png)
 
 ## Setup
-###installing dependencies
+### installing dependencies
 ```
 npm install
 ```
-###Serving web application
+### Serving web application
 ```
 node server.js
 ```
 
-*The 2 test users in the initUsers.mongo script are: alice with password = secret, and bob with password = password
+* The 2 test users in the initUsers.mongo script are: alice with password = secret, and bob with password = password
